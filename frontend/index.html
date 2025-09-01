@@ -3,105 +3,70 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Studio – Chat, Editor, Archivos, Canvas, Terminal, Gráficas</title>
-  
-  <!-- Content Security Policy (ajustada para permitir estilos y scripts de CDNs si fuera necesario en el futuro) -->
+  <title>Studio Pro – IDE en la Web</title>
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self';">
-  
+        content="default-src 'self' https://cdn.jsdelivr.net; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net;">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🚀%3C/text%3E%3C/svg%3E">
   
-  <!-- Librería para la Terminal -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css" />
+  <!-- Librerías Externas -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/theme/dracula.css">
 
-  <!-- Hoja de Estilos Principal -->
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-
   <header class="topbar" role="banner">
-    <div class="brand">🚀 Studio</div>
+    <div class="brand">Studio Pro</div>
     <nav class="nav" role="navigation" aria-label="Navegación principal">
-      <button class="tab-btn" data-tab="editor" aria-selected="true">Editor</button>
+      <button class="tab-btn is-active" data-tab="editor">Editor</button>
       <button class="tab-btn" data-tab="chat">Chat</button>
       <button class="tab-btn" data-tab="canvas">Canvas</button>
       <button class="tab-btn" data-tab="graphs">Gráficas</button>
     </nav>
   </header>
 
-  <main id="app" class="app-layout" role="main">
-
-    <!-- Panel Lateral de Archivos -->
-    <aside class="sidebar">
-      <div class="sidebar-header">ARCHIVOS</div>
+  <div class="main-container">
+    <aside id="sidebar" class="sidebar">
+      <!-- La vista de archivos ahora vive en la barra lateral -->
+      <h4>Archivos del Proyecto</h4>
       <ul class="file-tree">
-        <li class="folder is-open">
-          <span>src</span>
-          <ul>
-            <li class="file"><span>📄 app.js</span></li>
-            <li class="file"><span>📄 styles.css</span></li>
-          </ul>
-        </li>
-        <li class="file is-active"><span>📄 index.html</span></li>
-        <li class="file"><span>📄 package.json</span></li>
+        <li>📄 index.html</li>
+        <li>🎨 styles.css</li>
+        <li>✨ app.js</li>
+        <li>📦 package.json</li>
       </ul>
     </aside>
 
-    <!-- Divisor Vertical -->
-    <div class="resizer" data-direction="vertical"></div>
+    <div class="resizer" id="resizer-v"></div>
 
-    <!-- Contenido Principal (Editor + Terminal) -->
-    <div class="main-content">
+    <main id="app" class="app-content" role="main">
+      <div class="views-container">
+        <section id="view-editor" class="view is-active"></section>
+        <section id="view-chat" class="view" hidden></section>
+        <section id="view-canvas" class="view" hidden></section>
+        <section id="view-graphs" class="view" hidden></section>
+      </div>
       
-      <!-- Panel Superior con Pestañas -->
-      <div class="main-pane">
-        <section id="view-editor" class="view is-active">
-          <div class="editor-controls">
-            <button id="run-code-btn">▶️ Ejecutar</button>
-          </div>
-          <textarea id="code-editor" spellcheck="false">
-// ¡Bienvenido al editor!
-// Escribe tu código JavaScript aquí y presiona "Ejecutar".
+      <div class="resizer-horizontal" id="resizer-h"></div>
 
-function greet(name) {
-  return `Hola, ${name}!`;
-}
-
-console.log(greet('Mundo'));
-
-// Prueba un bucle
-for (let i = 1; i <= 3; i++) {
-  console.log(`Iteración número ${i}`);
-}
-          </textarea>
-        </section>
-        <section id="view-chat" class="view" hidden><h2>Vista de Chat</h2></section>
-        <section id="view-canvas" class="view" hidden><h2>Vista de Canvas</h2></section>
-        <section id="view-graphs" class="view" hidden><h2>Vista de Gráficas</h2></section>
+      <div id="terminal-container" class="terminal-container">
+          <!-- La terminal se renderizará aquí -->
       </div>
-
-      <!-- Divisor Horizontal -->
-      <div class="resizer" data-direction="horizontal"></div>
-
-      <!-- Panel Inferior (Terminal) -->
-      <div class="terminal-pane">
-        <div class="terminal-header">
-          <span>TERMINAL</span>
-          <button id="clear-terminal-btn">🗑️ Limpiar</button>
-        </div>
-        <div id="terminal-container"></div>
-      </div>
-    </div>
-  </main>
+    </main>
+  </div>
 
   <footer class="statusbar" role="contentinfo">
     <div id="status">Listo.</div>
     <div id="trace">Línea: 1, Col: 1</div>
   </footer>
 
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+  <!-- Scripts de Librerías -->
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/javascript/javascript.js"></script>
+  
+  <!-- Tu aplicación -->
   <script type="module" src="./app.js"></script>
 </body>
 </html>
