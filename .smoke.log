@@ -1,0 +1,4 @@
+[INFO] 2025-09-01T12:41:20.950Z Servidor escuchando en http://localhost:3000
+[INFO] 2025-09-01T12:41:20.951Z Frontend servido desde: /workspaces/Tecles1107/frontend
+[REQ ] 2025-09-01T12:41:21.266Z GET /api/health 200 5ms
+[REQ ] 2025-09-01T12:41:21.273Z GET /api/health 200 0ms

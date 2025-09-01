@@ -1,0 +1,99 @@
+import { api } from "../lib/ApiClient.js";
+import { bus } from "../lib/EventBus.js";
+import { Store } from "../lib/Store.js";
+import { escapeHTML, sanitizeText } from "../lib/Sanitizer.js";
+import { el } from "../lib/dom.js";
+
+export class Chat {
+  constructor(root) {
+    this.root = root;
+    this.store = new Store({ messages: [] , busy: false, error: ""});
+    this.mount();
+  }
+
+  mount() {
+    this.view = el("section", { class: "chat" }, [
+      (this.messagesEl = el("div", { class: "chat__messages", id: "chat-messages" })),
+      el("div", { class: "chat__input" }, [
+        (this.inputEl = el("input", { type: "text", placeholder: "Escribe tu mensaje…", id: "chat-input" })),
+        (this.sendBtn = el("button", { id: "chat-send", onClick: () => this.onSend() }, ["Enviar"]))
+      ])
+    ]);
+    this.root.appendChild(this.view);
+
+    this.inputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        this.onSend();
+      }
+    });
+
+    this.store.subscribe(() => this.render());
+    this.render();
+    this.checkHealth();
+  }
+
+  async checkHealth() {
+    const statusEl = document.getElementById("status");
+    if (!statusEl) return;
+    statusEl.className = "status status-warn";
+    statusEl.title = "Comprobando…";
+    try {
+      await api.request("/api/health");
+      statusEl.className = "status status-ok";
+      statusEl.title = "Conectado";
+    } catch {
+      statusEl.className = "status status-err";
+      statusEl.title = "Desconectado";
+    }
+  }
+
+  scrollToBottom() {
+    this.messagesEl.scrollTop = this.messagesEl.scrollHeight;
+  }
+
+  pushMessage(role, text) {
+    const msg = { role, text, ts: Date.now() };
+    const { messages } = this.store.get();
+    this.store.patch({ messages: messages.concat([msg]) });
+    this.scrollToBottom();
+  }
+
+  async onSend() {
+    if (this.store.get().busy) return;
+    const raw = this.inputEl.value;
+    const clean = sanitizeText(raw);
+    if (!clean) return;
+
+    this.pushMessage("user", clean);
+    this.inputEl.value = "";
+    this.store.patch({ busy: true, error: "" });
+
+    try {
+      const data = await api.json("/api/echo", "POST", { message: clean });
+      const text = typeof data?.reply === "string" ? data.reply : JSON.stringify(data);
+      this.pushMessage("bot", text);
+      bus.emit("chat:botMessage", { text, meta: data });
+    } catch (err) {
+      const msg = err?.message || "Error al enviar";
+      this.store.patch({ error: msg });
+      this.pushMessage("bot", `⚠️ ${msg}`);
+    } finally {
+      this.store.patch({ busy: false });
+      this.inputEl.focus();
+    }
+  }
+
+  render() {
+    const { messages, busy } = this.store.get();
+    this.sendBtn.disabled = busy;
+    this.inputEl.disabled = busy;
+
+    this.messagesEl.innerHTML = "";
+    for (const m of messages) {
+      const css = m.role === "user" ? "msg msg--user" : "msg msg--bot";
+      const text = escapeHTML(m.text);
+      this.messagesEl.appendChild(el("div", { class: css }, [text]));
+    }
+  }
+}
