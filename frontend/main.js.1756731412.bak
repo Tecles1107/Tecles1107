@@ -1,7 +1,0 @@
-import { Chat } from "./components/Chat.js";
-import { $ } from "./lib/dom.js";
-
-document.addEventListener("DOMContentLoaded", () => {
-  const app = $("#app");
-  new Chat(app);
-});
