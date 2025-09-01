@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Studio – Chat, Editor, Archivos, Canvas, Terminal, Gráficas</title>
+  <!-- Content Security Policy estricta: sin inline scripts/styles -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/>">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar" role="banner">
+    <div class="brand">Studio</div>
+    <nav class="nav" role="navigation" aria-label="Navegación principal">
+      <button class="tab-btn" data-tab="chat" aria-controls="view-chat" aria-selected="true">Chat</button>
+      <button class="tab-btn" data-tab="editor" aria-controls="view-editor">Editor</button>
+      <button class="tab-btn" data-tab="files" aria-controls="view-files">Archivos</button>
+      <button class="tab-btn" data-tab="canvas" aria-controls="view-canvas">Canvas</button>
+      <button class="tab-btn" data-tab="graphs" aria-controls="view-graphs">Gráficas</button>
+      <button class="tab-btn" data-tab="terminal" aria-controls="view-terminal">Terminal</button>
+    </nav>
+  </header>
+
+  <main id="app" class="app" role="main">
+    <section id="view-chat" class="view is-active" aria-labelledby="tab-chat"></section>
+    <section id="view-editor" class="view" hidden aria-labelledby="tab-editor"></section>
+    <section id="view-files" class="view" hidden aria-labelledby="tab-files"></section>
+    <section id="view-canvas" class="view" hidden aria-labelledby="tab-canvas"></section>
+    <section id="view-graphs" class="view" hidden aria-labelledby="tab-graphs"></section>
+    <section id="view-terminal" class="view" hidden aria-labelledby="tab-terminal"></section>
+  </main>
+
+  <footer class="statusbar" role="contentinfo">
+    <div id="status">Listo.</div>
+    <div id="trace">Eventos: 0</div>
+  </footer>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
