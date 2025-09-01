@@ -1,156 +1,154 @@
-/* --- Variables y Estilos Globales --- */
 :root {
+  --bg-color: #1e1e2e;
+  --fg-color: #cdd6f4;
+  --panel-bg: #282a36;
+  --border-color: #44475a;
+  --accent-color: #8be9fd;
+  --hover-color: #44475a;
   --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --bg-color: #1e1e1e;
-  --bg-color-light: #252526;
-  --bg-color-lighter: #333333;
-  --border-color: #444444;
-  --text-color: #cccccc;
-  --text-color-dark: #888888;
-  --accent-color: #007acc;
-  --sidebar-width: 250px;
-  --terminal-height: 200px;
 }
 
 body {
   margin: 0;
   font-family: var(--font-family);
   background-color: var(--bg-color);
-  color: var(--text-color);
-  overflow: hidden; /* Evita el scroll en el body */
-  height: 100vh;
+  color: var(--fg-color);
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
 }
 
-/* --- Estructura Principal --- */
+/* --- Layout Principal --- */
 .topbar {
   display: flex;
   align-items: center;
-  background-color: var(--bg-color-lighter);
+  padding: 0 1rem;
+  background-color: var(--panel-bg);
   border-bottom: 1px solid var(--border-color);
-  padding: 0 10px;
   flex-shrink: 0;
 }
-.brand { font-weight: bold; padding-right: 20px; }
-.nav { display: flex; }
 
-.app-layout {
+.brand {
+  font-weight: bold;
+  padding-right: 2rem;
+}
+
+.main-container {
   display: flex;
   flex-grow: 1;
-  height: calc(100vh - 60px); /* Ajusta según la altura del topbar y statusbar */
+  overflow: hidden; /* Clave para el layout */
 }
 
-.statusbar {
-  display: flex;
-  justify-content: space-between;
-  padding: 4px 10px;
-  background-color: var(--bg-color-lighter);
-  border-top: 1px solid var(--border-color);
-  font-size: 0.8em;
-  flex-shrink: 0;
-}
-
-/* --- Paneles y Divisores --- */
 .sidebar {
-  flex-basis: var(--sidebar-width);
-  background-color: var(--bg-color-light);
+  background-color: var(--panel-bg);
+  padding: 1rem;
+  flex: 0 0 250px; /* Ancho inicial */
+  min-width: 150px;
   overflow-y: auto;
-  flex-shrink: 0;
 }
 
-.main-content {
-  flex-grow: 1;
+.app-content {
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
 }
 
-.main-pane {
+.views-container {
   flex-grow: 1;
   position: relative;
 }
-.terminal-pane {
-  flex-basis: var(--terminal-height);
-  display: flex;
-  flex-direction: column;
-  background-color: #181818;
-  flex-shrink: 0;
+
+.terminal-container {
+  flex: 0 0 200px; /* Altura inicial */
+  min-height: 50px;
+  background-color: #111;
+  padding: 0.5rem;
 }
 
+/* --- Paneles Redimensionables --- */
 .resizer {
+  flex: 0 0 5px;
   background-color: var(--border-color);
-  cursor: ew-resize;
-  flex-shrink: 0;
+  cursor: col-resize;
+  z-index: 10;
 }
-.resizer[data-direction="vertical"] { width: 5px; }
-.resizer[data-direction="horizontal"] { height: 5px; cursor: ns-resize; }
+.resizer-horizontal {
+    flex: 0 0 5px;
+    background-color: var(--border-color);
+    cursor: row-resize;
+    z-index: 10;
+}
+.resizer:hover, .resizer-horizontal:hover {
+  background-color: var(--accent-color);
+}
 
-/* --- Componentes --- */
+/* --- Pestañas y Vistas --- */
 .tab-btn {
   background: none;
   border: none;
-  color: var(--text-color-dark);
-  padding: 10px 15px;
+  color: var(--fg-color);
+  padding: 0.75rem 1rem;
   cursor: pointer;
   border-bottom: 2px solid transparent;
+  transition: all 0.2s ease-in-out;
 }
-.tab-btn:hover { color: var(--text-color); }
-.tab-btn[aria-selected="true"] {
-  color: var(--text-color);
+
+.tab-btn:hover {
+  background-color: var(--hover-color);
+}
+
+.tab-btn.is-active {
+  color: var(--accent-color);
   border-bottom-color: var(--accent-color);
 }
 
 .view {
-  padding: 20px;
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow-y: auto;
-}
-.view:not(.is-active) { display: none; }
-
-/* --- Panel de Archivos --- */
-.sidebar-header { padding: 10px; font-weight: bold; color: var(--text-color-dark); }
-.file-tree { list-style: none; padding: 0 0 0 10px; margin: 0; }
-.file-tree li { padding: 5px 10px; cursor: pointer; user-select: none; }
-.file-tree li:hover { background-color: var(--bg-color-lighter); }
-.file-tree .file.is-active { background-color: var(--accent-color); }
-.file-tree .folder::before { content: '📁'; margin-right: 5px; }
-.file-tree .folder.is-open > ul { display: block; }
-.file-tree .folder > ul { display: none; padding-left: 15px; }
-
-/* --- Editor --- */
-.editor-controls { padding: 0 20px 10px; }
-#run-code-btn { background-color: var(--accent-color); border: none; color: white; padding: 5px 15px; border-radius: 3px; cursor: pointer; }
-#code-editor {
-  width: calc(100% - 40px);
-  height: calc(100% - 80px);
-  background-color: #2a2a2b;
-  color: #d4d4d4;
-  border: none;
-  font-family: "Courier New", Courier, monospace;
-  font-size: 14px;
-  padding: 10px;
-  resize: none;
-  outline: none;
+  top: 0; left: 0; right: 0; bottom: 0;
+  padding: 1rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s;
 }
 
-/* --- Terminal --- */
-.terminal-header {
+.view.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* --- Barra de Estado --- */
+.statusbar {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 5px 10px;
-  background-color: var(--bg-color-lighter);
-  font-weight: bold;
+  padding: 0.25rem 1rem;
+  background-color: var(--panel-bg);
+  border-top: 1px solid var(--border-color);
+  font-size: 0.8rem;
+  flex-shrink: 0;
 }
-#clear-terminal-btn { background: none; border: none; color: var(--text-color); cursor: pointer; font-size: 16px; }
-#terminal-container {
-  flex-grow: 1;
-  padding: 0 10px 5px;
+
+/* --- Estilos de Componentes --- */
+.file-tree {
+  list-style: none;
+  padding: 0;
+}
+.file-tree li {
+  padding: 0.3rem 0;
+  cursor: pointer;
+}
+.file-tree li:hover {
+  color: var(--accent-color);
+}
+
+/* --- Estilos para CodeMirror y Xterm --- */
+.CodeMirror {
+  height: 100%;
+  font-size: 14px;
 }
 .xterm .xterm-viewport {
-    background-color: #181818 !important; /* Forzar fondo */
+  width: 100% !important; /* Arreglo para el scroll */
+}
+.terminal-container .xterm {
+  height: 100%;
 }
