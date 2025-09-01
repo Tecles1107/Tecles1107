@@ -1,3 +1,13 @@
+# Mejorar la configuración del workflow de Webpack
+
+## Problemas actuales:
+1. Falta de working-directory
+2. Sin cache de node_modules
+3. Sin testing
+4. Sin verificación de build
+
+## Solución propuesta:
+```yaml
 name: NodeJS with Webpack
 
 on:
@@ -9,7 +19,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
     strategy:
       matrix:
         node-version: [18.x, 20.x, 22.x]
@@ -21,8 +31,23 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run tests
+      run: npm test
 
     - name: Build
       run: |
-        npm install
+        npm run build
         npx webpack
+
+    - name: Verify build
+      run: |
+        if [ ! -d "dist" ]; then
+          echo "Build failed - dist directory not found"
+          exit 1
+        fi
+```
