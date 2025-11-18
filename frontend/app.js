@@ -28,65 +28,93 @@ const term = new Terminal({
 });
 term.open(termContainer);
 
-// --- 2. Funcionalidad de la Terminal (Simulada) ---
+import { streamText } from './lib/StreamText.js';
+import { Config } from './lib/Config.js';
+import { Chat } from './components/Chat.js';
+import { GitPanel } from './components/Git.js';
+
+// --- 1. Inicialización de Componentes ---
+
+// Editor de Código con CodeMirror
+const editorView = document.getElementById('view-editor');
+const editor = CodeMirror(editorView, {
+  value: `// ¡Bienvenido a Studio Pro!
+function greet(name) {
+  console.log(\`Hola, \${name} desde el editor!\`);
+}
+
+greet('Mundo');
+`,
+  mode: 'javascript',
+  theme: 'dracula',
+  lineNumbers: true,
+  autofocus: true,
+});
+
+// Terminal con Xterm.js
+const termContainer = document.getElementById('terminal-container');
+const term = new Terminal({
+  cursorBlink: true,
+  theme: {
+    background: '#111',
+    foreground: '#00ff00',
+  },
+  fontFamily: 'monospace',
+});
+term.open(termContainer);
+
+// --- 2. Funcionalidad de la Terminal (Conectada al Backend) ---
 
 const prompt = '$ ';
 term.write('Terminal de Studio Pro v1.0\r\n');
-term.write('Escribe "help" para ver los comandos disponibles.\r\n');
 term.write(prompt);
 
 let command = '';
+let isExecuting = false;
 
-term.onKey(({ key, domEvent }) => {
+term.onKey(async ({ key, domEvent }) => {
+  if (isExecuting) return;
+
   if (domEvent.keyCode === 13) { // Enter
     if (command) {
       term.write('\r\n');
-      runCommand(command);
+      isExecuting = true;
+      await runCommand(command);
       command = '';
+      term.write(`\r\n${prompt}`);
+      isExecuting = false;
+    } else {
+      term.write(`\r\n${prompt}`);
     }
-    term.write(`\r\n${prompt}`);
   } else if (domEvent.keyCode === 8) { // Backspace
     if (command.length > 0) {
       term.write('\b \b');
       command = command.slice(0, -1);
     }
-  } else {
+  } else if (!domEvent.altKey && !domEvent.ctrlKey && !domEvent.metaKey) {
     term.write(key);
     command += key;
   }
 });
 
-function runCommand(cmd) {
-  const args = cmd.split(' ');
-  const baseCmd = args[0];
+async function runCommand(cmd) {
+  if (cmd.trim() === 'clear') {
+    term.clear();
+    return;
+  }
 
-  switch (baseCmd) {
-    case 'help':
-      term.write('Comandos disponibles:\r\n');
-      term.write('  ls         - Lista los archivos del proyecto\r\n');
-      term.write('  cat [file] - Muestra el contenido de un archivo\r\n');
-      term.write('  echo [msg] - Imprime un mensaje\r\n');
-      term.write('  clear      - Limpia la terminal\r\n');
-      term.write('  npm [arg]  - Simula un comando npm\r\n');
-      break;
-    case 'ls':
-      term.write('index.html  styles.css  app.js  package.json\r\n');
-      break;
-    case 'cat':
-      term.write(`(simulado) Mostrando contenido de ${args[1] || 'ningún archivo'}...\r\n`);
-      break;
-    case 'echo':
-      term.write(args.slice(1).join(' ') + '\r\n');
-      break;
-    case 'clear':
-      term.clear();
-      break;
-    case 'npm':
-      term.write(`(simulado) Ejecutando npm ${args[1] || 'install'}...\r\n`);
-      setTimeout(() => term.write('¡Paquetes instalados con éxito! (simulado)\r\n'), 1500);
-      break;
-    default:
-      term.write(`Comando no encontrado: ${cmd}\r\n`);
+  try {
+    const url = Config.apiBase + Config.endpoints.terminal;
+    for await (const chunk of streamText(url, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ command: cmd })
+    })) {
+      // Reemplaza saltos de línea por el formato de terminal \r\n
+      term.write(chunk.replace(/\n/g, '\r\n'));
+    }
+  } catch (err) {
+    term.write(`\r\n\x1b[31mError: ${err.message}\x1b[0m`);
   }
 }
 
@@ -95,6 +123,7 @@ function runCommand(cmd) {
 
 const tabs = document.querySelectorAll('.tab-btn');
 const views = document.querySelectorAll('.view');
+const componentInstances = {}; // Almacena instancias de componentes para no recrearlos
 
 tabs.forEach(tab => {
   tab.addEventListener('click', () => {
@@ -107,14 +136,29 @@ tabs.forEach(tab => {
 
     // Activar la seleccionada
     tab.classList.add('is-active');
-    const targetView = document.getElementById(`view-${tab.dataset.tab}`);
+    const tabName = tab.dataset.tab;
+    const targetView = document.getElementById(`view-${tabName}`);
+    
     if (targetView) {
       targetView.hidden = false;
+      
+      // Inicializa el componente si es la primera vez
+      if (!componentInstances[tabName]) {
+        switch (tabName) {
+          case 'chat':
+            componentInstances[tabName] = new Chat(targetView);
+            break;
+          case 'git':
+            componentInstances[tabName] = new GitPanel(targetView);
+            break;
+          // Añadir otros casos para otros componentes dinámicos
+        }
+      }
+
       // Pequeño delay para que la transición CSS funcione correctamente
       setTimeout(() => {
         targetView.classList.add('is-active');
-        // Si la vista activada es el editor, refresca CodeMirror
-        if (tab.dataset.tab === 'editor') {
+        if (tabName === 'editor') {
           editor.refresh();
         }
       }, 10);

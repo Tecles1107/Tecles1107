@@ -152,3 +152,56 @@ body {
 .terminal-container .xterm {
   height: 100%;
 }
+
+/* --- Estilos para el Panel de Git --- */
+.git-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.git-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 1rem;
+}
+
+.git-controls button {
+  background-color: var(--panel-bg);
+  color: var(--fg-color);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.git-controls button:hover {
+  background-color: var(--hover-color);
+}
+
+.git-action {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.git-input {
+  background-color: #333;
+  border: 1px solid var(--border-color);
+  color: var(--fg-color);
+  padding: 0.5rem;
+  font-family: var(--font-family);
+}
+
+.git-output {
+  flex-grow: 1;
+  background-color: #111;
+  padding: 1rem;
+  font-family: monospace;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-y: auto;
+}

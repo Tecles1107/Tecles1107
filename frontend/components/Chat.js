@@ -2,6 +2,7 @@ import { streamText } from "../lib/StreamText.js";
 import { escapeHTML, sanitizeText } from "../lib/Sanitizer.js";
 import { el } from "../lib/dom.js";
 import { api } from "../lib/ApiClient.js";
+import { Config } from "../lib/Config.js";
 
 export class Chat {
   constructor(root) {

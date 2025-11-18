@@ -1,0 +1,81 @@
+# Nombre del Workflow: Integración Continua y Despliegue Continuo
+name: CI/CD
+
+on:
+  # Se activa en cambios a la rama principal
+  push:
+    branches: [ "main" ]
+  # También en Pull Requests a la rama principal
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # --- TRABAJO 1: CONSTRUCCIÓN Y VERIFICACIÓN ---
+  build:
+    name: "Verificación y Pruebas"
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+    - name: "1. Clonar el repositorio"
+      uses: actions/checkout@v3
+
+    - name: "2. Configurar Node.js ${{ matrix.node-version }} con caché"
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm' # Habilita el caché para las dependencias de npm
+
+    - name: "3. Instalar dependencias (raíz)"
+      run: npm install
+
+    - name: "4. Instalar dependencias (backend)"
+      run: npm install --prefix backend
+
+    - name: "5. Análisis de Seguridad de Dependencias"
+      run: npm audit --audit-level=high # Falla si encuentra vulnerabilidades altas
+
+    - name: "6. Ejecutar Linter para formato de código"
+      run: npm run lint
+
+    - name: "7. Prueba de Humo (Smoke Test) del Backend"
+      run: |
+        npm start --prefix backend &
+        sleep 5 # Dar tiempo al servidor para que inicie
+        # Verifica que el endpoint de 'health' responde correctamente
+        curl -f http://localhost:3000/api/health || exit 1
+
+  # --- TRABAJO 2: DESPLIEGUE A GITHUB PAGES ---
+  deploy:
+    name: "Despliegue a GitHub Pages"
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: "1. Clonar el repositorio"
+        uses: actions/checkout@v3
+
+      - name: "2. Configurar GitHub Pages"
+        uses: actions/configure-pages@v3
+
+      - name: "3. Empaquetar artefacto del sitio web"
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: './frontend'
+
+      - name: "4. Desplegar en GitHub Pages"
+        id: deployment
+        uses: actions/deploy-pages@v2
