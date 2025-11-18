@@ -1,7 +1,18 @@
 node_modules/
 .DS_Store
 npm-debug.log*
+# Environment variables
 .env
+.env.local
+.env.*.local
+
+# Editor files
+*.swp
+*.swo
+
+# Backup files
+*.bak
+
 .vscode/
 .idea/
 *.bak.*
