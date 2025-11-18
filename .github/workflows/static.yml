@@ -1,61 +1,53 @@
-# Flujo de trabajo mejorado para construir y desplegar contenido estático en GitHub Pages
 name: Deploy static content to Pages
 
 on:
-  # Se ejecuta en pushes que apuntan a la rama por defecto
   push:
     branches: ["main"]
-
-  # Permite ejecutar este flujo de trabajo manualmente desde la pestaña Actions
   workflow_dispatch:
 
-# Establece los permisos del GITHUB_TOKEN para permitir el despliegue en GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Permite solo un despliegue concurrente.
 concurrency:
   group: "pages"
-  cancel-in-progress: true # Se puede cambiar a true para cancelar ejecuciones antiguas cuando llega una nueva
+  cancel-in-progress: true
 
 jobs:
-  # Trabajo de construcción (Build)
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      # --- PASOS ESPECÍFICOS DE TU PROYECTO ---
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20" # Elige tu versión de Node.js
-          cache: 'npm' # Habilita el caché para los paquetes de npm
+          node-version: "20"
+          cache: "npm"
+
       - name: Install dependencies
-        run: npm ci # 'ci' es más rápido y seguro para entornos de CI que 'install'
+        run: npm ci
+
       - name: Build static site
-        run: npm run build # Ejecuta el script de construcción de tu proyecto
-      # ----------------------------------------
+        run: npm run build
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Sube el directorio que contiene los archivos estáticos generados
-          # Cambia 'dist' por el directorio de salida de tu herramienta (ej: build, _site, public)
-          path: './dist'
+          path: "./dist"
 
-  # Trabajo de despliegue (Deploy)
   deploy:
-    # El trabajo de despliegue depende de que el trabajo de 'build' termine con éxito
+    runs-on: ubuntu-latest
     needs: build
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4 # No necesita más configuración, toma el artefacto automáticamente
+        uses: actions/deploy-pages@v4
