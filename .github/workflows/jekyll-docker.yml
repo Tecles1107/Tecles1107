@@ -2,27 +2,43 @@ name: CI de sitio Jekyll
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "Principal" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "Principal" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
 
-    - name: Construir el sitio en el contenedor jekyll/builder
-      run: |
-        docker run \
-          -v ${{ github.workspace }}:/srv/jekyll \
-          -v ${{ github.workspace }}/_site:/srv/jekyll/_site \
-          jekyll/builder:latest /bin/bash -c \
-          "chmod -R 755 /srv/jekyll && jekyll build --future"
+      - name: Configurar caché de Bundler
+        uses: actions/cache@v4
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
 
-    - name: Subir artefacto del sitio
-      uses: actions/upload-artifact@v4
-      with:
-        name: sitio-jekyll
-        path: _site
+      - name: Construir el sitio en contenedor Jekyll
+        run: |
+          docker run \
+            -v ${{ github.workspace }}:/srv/jekyll \
+            -v ${{ github.workspace }}/_site:/srv/jekyll/_site \
+            jekyll/builder:latest /bin/bash -c \
+            "chmod -R 755 /srv/jekyll && jekyll build --future"
+
+      - name: Validar enlaces internos
+        run: |
+          docker run \
+            -v ${{ github.workspace }}/_site:/srv/jekyll/_site \
+            jekyll/builder:latest /bin/bash -c \
+            "bundle exec htmlproofer /srv/jekyll/_site --disable-external"
+
+      - name: Subir artefacto del sitio
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sitio-Jekyll
+          path: _site
