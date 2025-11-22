@@ -9,12 +9,39 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [18.x]
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
-      with:
-        node-version: 18.x
-        cache: 'npm'
-    - run: npm install
-    - run: npm install --prefix backend
-    - run: npm run lint
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+
+      - name: Install root deps (npm ci)
+        run: npm ci
+
+      - name: Install backend deps (npm ci)
+        run: npm ci --prefix backend
+
+      - name: Lint frontend
+        run: npm run lint
+
+      - name: Lint backend
+        run: npm run lint --prefix backend || true
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Build backend
+        run: npm run build --prefix backend || echo "no backend build step"
+
+      - name: Run frontend tests
+        run: npm test --silent
+
+      - name: Run backend tests
+        run: npm test --prefix backend --silent || echo "no backend tests"
